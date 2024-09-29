@@ -86,3 +86,26 @@ def test_delete_message(client):
     rv = client.get("/delete/1")
     data = json.loads(rv.data)
     assert data["status"] == 1
+
+def test_search(client): # to do
+    login(client, app.config["USERNAME"], app.config["PASSWORD"])
+    client.post("/add", data=dict(title="Hello", text="World"))
+    res = client.get("/search/?query=Hello")
+    assert b'Hello' in res.data
+    assert b'World' in res.data
+
+def test_login_required(client):
+    # Currently, posts can be deleted by anyone. Let's change that so one has to be logged in before they can delete a post.
+    login(client, app.config["USERNAME"], app.config["PASSWORD"])
+    client.post("/add", data=dict(title="Hello", text="World"))
+    logout(client)
+
+    rv = client.get("/delete/1")
+    assert b'log in' in rv.data
+
+    login(client, app.config["USERNAME"], app.config["PASSWORD"])
+    rv = client.get("/delete/1")
+    data = json.loads(rv.data)
+    assert data["status"] == 1
+
+
